@@ -1,6 +1,24 @@
-console.log("starting server")
-while (true) {
-    await new Promise(r => setTimeout(r, 5000))
+import { readLines } from "https://deno.land/std@0.90.0/io/bufio.ts"
+import { opine, text } from "https://deno.land/x/opine@1.2.0/mod.ts"
+
+const app = opine()
+app.use(text())
+
+app.post("/refresh", async (req, res) => {
+    console.log("repl.deploy" + req.body + req.headers.get("Signature"))
+
+    const result: {
+        error: string
+        status: number
+    } = JSON.parse((await getStdinLine())!)
+
+    res.setStatus(result.status).end(result.error)
+})
+
+async function getStdinLine() {
+    for await (const line of readLines(Deno.stdin)) {
+        return line
+    }
 }
 
-export {}
+app.listen(8090)
